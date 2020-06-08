@@ -13,7 +13,7 @@ import {
     CommunicationState,
 } from "@coaty/core";
 
-import { CommunicationTopic } from "./communication-topic";
+import { MqttTopic } from "./mqtt-topic";
 
 /**
  * Options provided by the MQTT communication binding.
@@ -207,7 +207,7 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
     }
 
     createIoRoute(ioSourceId: string) {
-        return CommunicationTopic.getTopicName(
+        return MqttTopic.getTopicName(
             this.apiVersion,
             this.options.namespace,
             CommunicationEventType.IoValue,
@@ -370,8 +370,8 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
     protected onPublish(eventLike: CommunicationEventLike) {
         // Check whether raw topic is in a valid format; otherwise ignore it.
         if (eventLike.eventType === CommunicationEventType.Raw &&
-            (CommunicationTopic.isCoatyTopicLike(eventLike.eventTypeFilter) ||
-                !CommunicationTopic.isValidTopic(eventLike.eventTypeFilter, false))) {
+            (MqttTopic.isCoatyTopicLike(eventLike.eventTypeFilter) ||
+                !MqttTopic.isValidTopic(eventLike.eventTypeFilter, false))) {
             this.log(CommunicationBindingLogLevel.error, "Raw publication topic is invalid: ", eventLike.eventTypeFilter);
             return;
         }
@@ -383,8 +383,8 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
     protected onSubscribe(eventLike: CommunicationEventLike) {
         // Check whether raw topic is in a valid format; otherwise ignore it.
         if (eventLike.eventType === CommunicationEventType.Raw &&
-            (CommunicationTopic.isCoatyTopicLike(eventLike.eventTypeFilter) ||
-                !CommunicationTopic.isValidTopic(eventLike.eventTypeFilter, true))) {
+            (MqttTopic.isCoatyTopicLike(eventLike.eventTypeFilter) ||
+                !MqttTopic.isValidTopic(eventLike.eventTypeFilter, true))) {
             this.log(CommunicationBindingLogLevel.error, "Raw subscription topic is invalid: ", eventLike.eventTypeFilter);
             return;
         }
@@ -393,8 +393,8 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
         // IO route topic name is used both for publication and subscription it must
         // must not contain any wildcard tokens.
         if (eventLike.eventType === CommunicationEventType.IoValue &&
-            ((eventLike.isExternalIoRoute && CommunicationTopic.isCoatyTopicLike(eventLike.eventTypeFilter)) ||
-                !CommunicationTopic.isValidTopic(eventLike.eventTypeFilter, false))) {
+            ((eventLike.isExternalIoRoute && MqttTopic.isCoatyTopicLike(eventLike.eventTypeFilter)) ||
+                !MqttTopic.isValidTopic(eventLike.eventTypeFilter, false))) {
             this.log(CommunicationBindingLogLevel.error, "IO route topic is invalid: ", eventLike.eventTypeFilter);
             return;
         }
@@ -429,7 +429,7 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
         if (eventLike.eventType === CommunicationEventType.IoValue) {
             return eventLike.eventTypeFilter;
         }
-        return CommunicationTopic.getTopicName(
+        return MqttTopic.getTopicName(
             this.apiVersion,
             this.options.namespace,
             eventLike.eventType,
@@ -446,7 +446,7 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
         if (eventLike.eventType === CommunicationEventType.IoValue) {
             return eventLike.eventTypeFilter;
         }
-        return CommunicationTopic.getTopicFilter(
+        return MqttTopic.getTopicFilter(
             this.apiVersion,
             this.options.shouldEnableCrossNamespacing ? undefined : this.options.namespace,
             eventLike.eventType,
@@ -490,7 +490,7 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
 
     private _dispatchMessage(topicName: string, payload: any) {
         try {
-            const topic = CommunicationTopic.createByName(topicName);
+            const topic = MqttTopic.createByName(topicName);
 
             if (topic === undefined || topic.eventType === CommunicationEventType.IoValue) {
 
@@ -498,7 +498,7 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
                 // for them. Take into account that Raw and external IoValue events can use the same
                 // subscription topic.
                 this._issuedSubscriptionItems.forEach(item => {
-                    if ((item.eventType === CommunicationEventType.Raw && CommunicationTopic.matches(topicName, item.topicFilter)) ||
+                    if ((item.eventType === CommunicationEventType.Raw && MqttTopic.matches(topicName, item.topicFilter)) ||
                         (item.eventType === CommunicationEventType.IoValue && topicName === item.topicFilter)) {
                         this.log(CommunicationBindingLogLevel.debug,
                             "Inbound message as ",
