@@ -16,8 +16,8 @@
 ## Introduction
 
 This binding package provides a [Coaty](https://coaty.io) communication binding
-for transmitting Coaty communication events via the MQTT publish-subscribe
-messaging protocol.
+for transmitting Coaty communication events via the [MQTT](https://mqtt.org/)
+publish-subscribe messaging protocol.
 
 This package comes with complete [API
 documentation](https://coatyio.github.io/binding.mqtt.js/api/index.html).
