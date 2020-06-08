@@ -53,7 +53,7 @@ export class MqttTopic {
     }
 
     /**
-     * Create a new topic instance from the given publication topic name.
+     * Create a new topic instance from the given MQTT publication topic name.
      *
      * @param topicName the structured name of a Coaty publication topic
      * @returns a Coaty communication topic instance or undefined if the topic
@@ -80,7 +80,7 @@ export class MqttTopic {
     }
 
     /**
-     * Gets the topic name for the given topic levels.
+     * Gets the MQTT publication topic name for the given topic levels.
      *
      * @param version the protocol version
      * @param namepace the messaging namespace
@@ -109,7 +109,7 @@ export class MqttTopic {
     }
 
     /**
-     * Gets a topic filter for subscription.
+     * Gets a pattern-based MQTT topic filter with wildcards for subscription.
      *
      * @param version the protocol version
      * @param namepace the messaging namespace or undefined
@@ -152,23 +152,23 @@ export class MqttTopic {
      * Determines whether the given name is a valid MQTT topic for publication
      * or subscription. 
      *
-     * @param topicName a topic name
+     * @param name a topic name
      * @param forSubscription indicates whether the name is used for
      * subscription (true) or publication (false)
-     * @returns true if the given topic name can be used for publication or
-     * subscription; false otherwise
+     * @returns true if the given topic name can be used as requested; false
+     * otherwise
      */
-    static isValidTopic(topic: string, forSubscription = false): boolean {
-        if (!topic) {
+    static isValidTopic(name: string, forSubscription = false): boolean {
+        if (!name) {
             return false;
         }
-        if (topic.length * 4 > 65535 && this._getUtf8BytesCount(topic) > 65535) {
+        if (name.length * 4 > 65535 && this._getUtf8BytesCount(name) > 65535) {
             return false;
         }
         if (forSubscription) {
-            return topic.indexOf("\u0000") === -1;
+            return name.indexOf("\u0000") === -1;
         }
-        return !MqttTopic.ILLEGAL_TOPIC_CHARS_REGEX.test(topic);
+        return !MqttTopic.ILLEGAL_TOPIC_CHARS_REGEX.test(name);
     }
 
     /**
