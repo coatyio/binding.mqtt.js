@@ -35,7 +35,7 @@ export class MqttTopic {
     private static readonly PROTOCOL_NAME = "coaty";
     private static readonly PROTOCOL_NAME_PREFIX = MqttTopic.PROTOCOL_NAME + "/";
     private static readonly EVENT_TYPE_FILTER_SEPARATOR = ":";
-    private static readonly ILLEGAL_TOPIC_CHARS_REGEX = new RegExp(/[\u0000+#]/);
+    private static readonly ILLEGAL_TOPIC_CHARS_REGEX = /[\u0000+#]/;
 
     private static EVENT_TYPE_TOPIC_LEVELS: { [level: string]: CommunicationEventType };
     private static TOPIC_LEVELS_BY_EVENT_TYPE: string[];
