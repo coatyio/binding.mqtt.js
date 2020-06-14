@@ -83,8 +83,8 @@
 					<h2>Introduction</h2>
 				</a>
 				<p>This binding package provides a <a href="https://coaty.io">Coaty</a> communication binding
-					for transmitting Coaty communication events via the MQTT publish-subscribe
-				messaging protocol.</p>
+					for transmitting Coaty communication events via the <a href="https://mqtt.org/">MQTT</a>
+				publish-subscribe messaging protocol.</p>
 				<p>This package comes with complete <a href="https://coatyio.github.io/binding.mqtt.js/api/index.html">API
 				documentation</a>.</p>
 				<p>This package is considered the <em>reference implementation</em> for all
@@ -111,7 +111,6 @@
     ...
     communication: {
         binding: MqttBinding.withOptions({
-            <span class="hljs-keyword">namespace</span>: ...,
             brokerUrl: ... ,
             ...
         }),
@@ -157,10 +156,10 @@
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
 					<li class=" tsd-kind-class">
-						<a href="classes/communicationtopic.html" class="tsd-kind-icon">Communication<wbr>Topic</a>
+						<a href="classes/mqttbinding.html" class="tsd-kind-icon">Mqtt<wbr>Binding</a>
 					</li>
 					<li class=" tsd-kind-class">
-						<a href="classes/mqttbinding.html" class="tsd-kind-icon">Mqtt<wbr>Binding</a>
+						<a href="classes/mqtttopic.html" class="tsd-kind-icon">Mqtt<wbr>Topic</a>
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="interfaces/mqttbindingoptions.html" class="tsd-kind-icon">Mqtt<wbr>Binding<wbr>Options</a>
