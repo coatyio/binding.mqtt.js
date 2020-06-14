@@ -180,7 +180,6 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
      *   ...
      *   communication: {
      *       binding: MqttBinding.withOptions({
-     *           namespace: ...,
      *           brokerUrl: ... ,
      *           ...
      *       }),

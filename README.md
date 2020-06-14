@@ -54,7 +54,6 @@ const configuration: Configuration = {
     ...
     communication: {
         binding: MqttBinding.withOptions({
-            namespace: ...,
             brokerUrl: ... ,
             ...
         }),
