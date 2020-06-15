@@ -79,7 +79,7 @@ the Coaty JS framework also applies here.
 To release a new version of this package, follow these steps:
 
 1. `npm run cut-release` - prepare a new release, including automatic
-   versioning, conventional changelog, and tagging.
+   versioning, documentation generation, conventional changelog, and tagging.
 2. `npm run push-release` - push the prepared release to the remote git repo
 3. `npm run publish-release` - publish the package on npm registry.
 
