@@ -44,7 +44,7 @@
         "url": "https://github.com/coatyio/binding.mqtt.js/issues"
     },
     "dependencies": {
-        "@coaty/core": "^2.2.0",
+        "@coaty/core": "^2.2.1",
         "mqtt": "^4.1.0"
     },
     "devDependencies": {
