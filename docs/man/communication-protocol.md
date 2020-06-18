@@ -192,7 +192,7 @@ Programming `Observables` to observe communication events, MQTT subscription
 topics should be unsubscribed whenever the corresponding observable is
 unsubscribed by the application.
 
-Noet that the Namespace topic level **must** either specify a non-empty string
+Note that the Namespace topic level **must** either specify a non-empty string
 or a single-level wildcard (`+`), depending on whether the agent should restrict
 communication to a given namespace or enable cross-namespacing communication.
 
