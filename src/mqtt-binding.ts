@@ -413,7 +413,7 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
 
     private _reset() {
         this._client = undefined;
-        this._clientIdLogItem = "[---]";
+        this._clientIdLogItem = "[---] ";
         this._joinOptions = undefined;
         this._isPublishingDeferred = true;
         this._pendingPublicationItems = [];
@@ -536,7 +536,7 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
     /**
      * Encodes the given event data.
      * 
-     * @param eventData a raw value or JSON object to be encoded 
+     * @param eventLike event with raw or JSON object data 
      * @returns encoded data in raw or JSON-UTF8 string format
      * @throws if event data cannot be encoded
      */
@@ -544,6 +544,7 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
         if (eventLike.isDataRaw) {
             return eventLike.data;
         }
+        // Note: throws a TypeError if data is cyclic.
         return JSON.stringify(eventLike.data);
     }
 
