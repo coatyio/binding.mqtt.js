@@ -20,38 +20,48 @@ title: Coaty MQTT Communication Protocol
 ## Table of Contents
 
 * [Introduction](#introduction)
+* [Requirements](#requirements)
 * [Topic Structure](#topic-structure)
 * [Topic Filters](#topic-filters)
 * [Message Payloads](#message-payloads)
 
 ## Introduction
 
-This document specifies the common Coaty MQTT Communication Protocol that must be
-implemented by all language-specific Coaty MQTT communication bindings to be
+This document specifies the common Coaty MQTT Communication Protocol that must
+be implemented by all language-specific Coaty MQTT communication bindings to be
 interoperable.
 
 The *reference implementation* of this protocol can be found in the
-[binding.mqtt.js](https://github.com/coatyio/binding.mqtt.js) repository on GitHub.
+[binding.mqtt.js](https://github.com/coatyio/binding.mqtt.js) repository on
+GitHub.
 
-With a Coaty MQTT binding, Coaty communication events are transmitted via the MQTT
-publish-subscribe messaging protocol. The format of MQTT topic names and payloads
-conforms to the [MQTT](https://mqtt.org/) Specification Version 3.1.1.
+With a Coaty MQTT binding, Coaty communication events are transmitted via the
+MQTT publish-subscribe messaging protocol. The format of MQTT topic names and
+payloads conforms to the [MQTT](https://mqtt.org/) Specification Version 3.1.1.
+
+## Requirements
 
 General requirements for MQTT bindings are as follows:
 
 * The binding should be compatible with any MQTT broker that supports the MQTT
-  v3.1.1 or v5.0 protocols. The binding itself should connect to a broker using the
-  MQTT v3.1.1 protocol.
+  v3.1.1 or v5.0 protocols. The binding itself should connect to a broker using
+  the MQTT v3.1.1 protocol.
 * Always use MQTT QoS level 0 for publications, subscriptions, and last will as
   delivery of Coaty communication events should not rely on a higher QoS level.
-* Always connect to the MQTT message broker with a clean MQTT session to get a clean
-  new broker session on each (re)-connection.
+* Always connect to the MQTT message broker with a clean MQTT session to get a
+  clean new broker session on each (re)-connection.
+* Emit communication state `Online` on connection to the MQTT broker, and
+  `Offline` on disconnection.
 * If connection is broken, defer publications until next reconnection.
 * If connection is broken, support automatic resubscription of all subscribed
   topics on every reconnection.
-* Note that MQTT allows applications to send MQTT Control Packets of size up to
-  256 MB. For Publish messages, this includes the message topic of size up to
-  64K, the payload, as well as some bytes of header data.
+* On (re)connection, register a last will to be published for the unjoin event.
+* On successful (re)connection, join events must be published first in the given
+  order.
+
+Note that MQTT allows applications to send MQTT Control Packets of size up to
+256 MB. For Publish messages, this includes the message topic of size up to 64K,
+the payload, as well as some bytes of header data.
 
 > To debug MQTT messages published by a Coaty agent, you can use any MQTT client
 > and subscribe to the `coaty/#` topic. We recommend [MQTT
@@ -86,11 +96,10 @@ as specified in [RFC 4122](https://www.ietf.org/rfc/rfc4122.txt). In the string
 representation of a UUID the hexadecimal values "a" through "f" are output as
 lower case characters.
 
-> **Note**: Raw events and external IO value events do not conform to this topic
-> specification. They are published and subscribed on an application-specific
-> topic string, which can be any valid MQTT topic that must not start with
-> `<ProtocolName>/`. Inbound MQTT messages for Raw subscriptions that match a
-> topic starting with `<ProtocolName>/` must be discarded.
+> **Note**: Raw events and external IoValue events do not conform to this topic
+> structure. They are published and subscribed on an application-specific topic
+> string, which can be any valid MQTT topic that must not start with
+> `<ProtocolName>/`.
 
 A topic name for publication is composed as follows:
 
@@ -133,19 +142,14 @@ contain the characters `NULL (U+0000)`, `# (U+0023)`, `+ (U+002B)`, and `/
 (U+002F)`. Framework implementations specify the core type (`ADV:<coreType>`) or
 the object type (`ADV::<objectType>`) of the advertised object as filter in
 order to allow subscribers to listen just to objects of a specific core or
-object type. To support subscriptions on both types of filters every Advertise
-event should be published twice, once for the core type and once for the object
-type of the object to be advertised.
+object type.
 
 When publishing an Update event the Event topic level **must** include a filter
 of the form: `UPD:<filter>`. The filter must not be empty. It must not contain
 the characters `NULL (U+0000)`, `# (U+0023)`, `+ (U+002B)`, and `/ (U+002F)`.
 Framework implementations specify the core type (`UPD:<coreType>`) or the object
 type (`UPD::<objectType>`) of the updated object as filter in order to allow
-subscribers to listen just to objects of a specific core or object type. To
-support subscriptions on both types of filters every Update event should be
-published twice, once for the core type and once for the object type of the
-object to be updated.
+subscribers to listen just to objects of a specific core or object type.
 
 When publishing a Channel event the Event topic level **must** include a channel
 identifier of the form: `CHN:<channelId>`. The channel ID must not be empty. It
@@ -224,10 +228,10 @@ pairs in JavaScript Object Notation format ([JSON](http://www.json.org), see [RF
 4627](https://www.ietf.org/rfc/rfc4627.txt)).
 
 Message payloads **must** be serialized with a JSON serializer that
-encodes/decodes data as a UTF-8 string.
+encodes/decodes event data as a UTF-8 string.
 
-> **Note**: Payloads of Raw events and IO value events with raw data do not
-> conform to this specification. They are published as binary data encoded in
+> **Note**: Payloads of Raw events and IoValue events with raw data do not
+> conform to this specification. They are published as byte arrays encoded in
 > any application-specific format.
 
 ---
