@@ -1,5 +1,14 @@
 # Changelog
 
+<a name="2.0.2"></a>
+## [2.0.2](https://github.com/coatyio/binding.mqtt.js/compare/v2.0.1...v2.0.2) (2020-09-25)
+
+This patch release ensures that broker URLs with protocol `mqtt` or `mqtts` can be properly resolved in browsers.
+
+### Bug Fixes
+
+* ensure broker URL with protocol `mqtt` or `mqtts` is converted to `ws` or `wss` when running in browser ([37cf183](https://github.com/coatyio/binding.mqtt.js/commit/37cf183970ed10f4211ad18f3b2b23a0b1a6d667))
+
 <a name="2.0.1"></a>
 ## [2.0.1](https://github.com/coatyio/binding.mqtt.js/compare/v2.0.0...v2.0.1) (2020-06-17)
 
