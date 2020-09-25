@@ -284,7 +284,14 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
         mqttClientOpts.protocolId = "MQTT";
         mqttClientOpts.protocolVersion = 4;
 
-        this._client = connect(this.options.brokerUrl, mqttClientOpts);
+        let connectionUrl = this.options.brokerUrl;
+        const isWebPlatform = new Function("try {return this===window;}catch(e){return false;}")();
+        if (isWebPlatform) {
+            // Ensure websocket protocol is used in the browser.
+            connectionUrl = connectionUrl.replace(/^mqtt/, "ws");
+        }
+
+        this._client = connect(connectionUrl, mqttClientOpts);
 
         this.log(CommunicationBindingLogLevel.info, "Client connecting to ", this.options.brokerUrl);
 
