@@ -1,5 +1,10 @@
 # Changelog
 
+<a name="2.0.3"></a>
+## [2.0.3](https://github.com/coatyio/binding.mqtt.js/compare/v2.0.2...v2.0.3) (2021-06-29)
+
+This patch release optimizes keep-alive behavior of the MQTT binding to detect broken connections more quickly.
+
 <a name="2.0.2"></a>
 ## [2.0.2](https://github.com/coatyio/binding.mqtt.js/compare/v2.0.1...v2.0.2) (2020-09-25)
 
