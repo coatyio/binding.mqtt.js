@@ -1,5 +1,14 @@
 # Changelog
 
+<a name="2.0.4"></a>
+## [2.0.4](https://github.com/coatyio/binding.mqtt.js/compare/v2.0.3...v2.0.4) (2021-07-01)
+
+This patch release fixes an issue that causes publications to be blocked after connection downtime in some rare situations.
+
+### Bug Fixes
+
+* **mqtt-binding:** prevent publications from being not submitted after reconnection in some rare situations ([c2dc11f](https://github.com/coatyio/binding.mqtt.js/commit/c2dc11fd7754855a7213d6061134e14c3dde1bec))
+
 <a name="2.0.3"></a>
 ## [2.0.3](https://github.com/coatyio/binding.mqtt.js/compare/v2.0.2...v2.0.3) (2021-06-29)
 
