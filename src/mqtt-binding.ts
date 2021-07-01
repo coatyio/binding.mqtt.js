@@ -162,7 +162,7 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
     private _joinOptions: CommunicationBindingJoinOptions;
     private _pendingPublicationItems: PublicationItem[];
     private _issuedSubscriptionItems: SubscriptionItem[];
-    private _isPublishingDeferred: boolean;
+    private _isDrainingPublications: boolean;
     private _client: Client;
     private _clientIdLogItem: string;
     private _qos: 0 | 1 | 2;
@@ -180,6 +180,7 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
      *   ...
      *   communication: {
      *       binding: MqttBinding.withOptions({
+     *           namespace: ...,
      *           brokerUrl: ... ,
      *           ...
      *       }),
@@ -252,21 +253,20 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
         mqttClientOpts.clientId = clientId;
         this._clientIdLogItem = `[${clientId}] `;
 
-        // Do not support persistent sessions in broker as this interferes with deferred
-        // subscription and publication management on the client side. Always connect
-        // with the same clientId and set 'clean' to true (MQTT.js default is true) to
-        // get a clean new broker session on each (re)-connection.
+        // Do not support clean/persistent sessions in broker as this interferes with
+        // deferred subscription and publication management on the client side. Always
+        // connect with the same clientId and set 'clean' to true (MQTT.js default is true)
+        // to get a clean new broker session on each (re)-connection.
         //
-        // MQTT CleanSession behavior: When a connecting client provides a CLEAN=true|1
-        // flag for the MQTT session, the client’s MQTT session and any related
-        // information (subscription sets and undelivered messages) are not persisted
-        // after the client disconnects. That is, the flag ensures that the session
-        // “cleans up” after itself and no information is stored on the event broker
-        // after the client disconnects. If the client provides a CLEAN=false|0 flag,
-        // the MQTT session is persisted on the event broker, which means that the
-        // client’s client ID, topic subscriptions, QoS levels, and undelivered messages
-        // are all maintained (that is, they are not cleaned up). The client may then
-        // reconnect to the persisted session later.
+        // MQTT CleanSession behavior: When a connecting client provides a CLEAN=true|1 flag
+        // for the MQTT session, the client’s MQTT session and any related information
+        // (subscription sets and undelivered messages) are not persisted after the client
+        // disconnects. That is, the flag ensures that the session “cleans up” after itself
+        // and no information is stored on the event broker after the client disconnects. If
+        // the client provides a CLEAN=false|0 flag, the MQTT session is persisted on the
+        // event broker, which means that the client’s client ID, topic subscriptions, QoS
+        // levels, and undelivered messages are all maintained (that is, they are not
+        // cleaned up). The client may then reconnect to the persisted session later.
         mqttClientOpts.clean = true;
 
         // Do not support automatic resubscription/republication of topics on reconnection
@@ -277,7 +277,7 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
         mqttClientOpts.queueQoSZero = false;
 
         // If connection is broken and reconnects, subscribed topics are not automatically
-        // subscribed again, because this is handled by our own binding logic.
+        // subscribed again, because this is handled by separate binding logic.
         mqttClientOpts.resubscribe = false;
 
         // Do not reschedule keep-alive messages after sending packets. This can
@@ -315,6 +315,7 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
             }
 
             // Start emitting all deferred offline publications.
+            this._isDrainingPublications = false;
             this._drainPublications();
         });
 
@@ -326,6 +327,10 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
         // Called after a disconnection requested by calling client.end().
         this._client.on("close", () => {
             this.log(CommunicationBindingLogLevel.info, "Client disconnected");
+
+            // Stop draining until next reconnect.
+            this._isDrainingPublications = true;
+
             this.emit("communicationState", CommunicationState.Offline);
         });
 
@@ -333,6 +338,10 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
         // is closed (for whatever reason) and before the client reconnects.
         this._client.on("offline", () => {
             this.log(CommunicationBindingLogLevel.info, "Client offline");
+
+            // Stop draining until next reconnect.
+            this._isDrainingPublications = true;
+
             this.emit("communicationState", CommunicationState.Offline);
         });
 
@@ -427,7 +436,7 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
         this._client = undefined;
         this._clientIdLogItem = "[---] ";
         this._joinOptions = undefined;
-        this._isPublishingDeferred = true;
+        this._isDrainingPublications = false;
         this._pendingPublicationItems = [];
         this._issuedSubscriptionItems = [];
         this.emit("communicationState", CommunicationState.Offline);
@@ -594,10 +603,10 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
     }
 
     private _drainPublications() {
-        if (!this._isPublishingDeferred) {
+        if (this._isDrainingPublications) {
             return;
         }
-        this._isPublishingDeferred = false;
+        this._isDrainingPublications = true;
         this._doDrainPublications();
     }
 
@@ -605,24 +614,32 @@ export class MqttBinding extends CommunicationBinding<MqttBindingOptions> {
         // In Joined state, try to publish each pending publication draining them in the
         // order they were queued.
         if (!this._client || this._pendingPublicationItems.length === 0) {
-            this._isPublishingDeferred = true;
+            this.log(CommunicationBindingLogLevel.debug, "Stop draining publications");
+            this._isDrainingPublications = false;
             return;
         }
 
-        const { topic, payload, options, callback } = this._pendingPublicationItems[0];
+        const pendingItem = this._pendingPublicationItems[0];
+        const { topic, payload, options, callback } = pendingItem;
+
+        this.log(CommunicationBindingLogLevel.debug, "Publishing on ", topic);
 
         this._client.publish(topic, payload, { qos: this._qos, retain: options?.retain || false }, err => {
             if (err) {
                 // If client is disconnected or disconnecting, stop draining, but keep this
                 // publication and all other pending ones queued for next reconnect.
-                this._isPublishingDeferred = true;
+                this.log(CommunicationBindingLogLevel.debug, "Error publishing on ", topic, err);
+                this._isDrainingPublications = false;
 
                 // Notify publishers of all remaining pending items.
                 this._pendingPublicationItems.forEach(item => item.callback && item.callback(true));
             } else {
                 this.log(CommunicationBindingLogLevel.debug, "Published on ", topic);
-                this._pendingPublicationItems.shift();
-                callback && callback(false);
+                const index = this._pendingPublicationItems.indexOf(pendingItem);
+                if (index !== -1) {
+                    this._pendingPublicationItems.splice(index, 1);
+                    callback && callback(false);
+                }
                 this._doDrainPublications();
             }
         });
