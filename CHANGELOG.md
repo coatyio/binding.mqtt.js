@@ -1,5 +1,14 @@
 # Changelog
 
+<a name="2.0.5"></a>
+## [2.0.5](https://github.com/coatyio/binding.mqtt.js/compare/v2.0.4...v2.0.5) (2021-10-22)
+
+This patch release fixes an issue where a stopped Coaty agent keeps the Node.js process from terminating.
+
+### Bug Fixes
+
+* **mqtt-binding:** on unjoining only deregister client event handlers that have been registered previously to prevent dangling asynchronous I/O operations which keep Node.js event loop from exiting ([b76c22c](https://github.com/coatyio/binding.mqtt.js/commit/b76c22cc5ad188e55cefc7eeedf8b02815ee7ed8))
+
 <a name="2.0.4"></a>
 ## [2.0.4](https://github.com/coatyio/binding.mqtt.js/compare/v2.0.3...v2.0.4) (2021-07-01)
 
