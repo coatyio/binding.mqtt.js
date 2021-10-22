@@ -2,9 +2,9 @@
 
 const fsextra = require("fs-extra");
 const gulp = require("gulp");
+const shell = require("gulp-shell");
 const tsc = require("gulp-typescript");
 const tslint = require("gulp-tslint");
-const typedoc = require("gulp-typedoc");
 const path = require("path");
 
 /**
@@ -90,17 +90,15 @@ gulp.task("lint:fix", () => {
         }));
 });
 
-/** 
+/**
  * Generate TypeDoc HTML documentation
  */
-gulp.task("doc", () => {
+ gulp.task("doc", () => {
     const typedocOptions = require(path.resolve("./typedoc.js"));
-
     fsextra.emptyDirSync(typedocOptions.out);
-
     return gulp
-        .src(["src/**/*.ts"])
-        .pipe(typedoc(Object.assign(typedocOptions)));
+        .src(path.resolve("./typedoc.js"), { read: false })
+        .pipe(shell(`${path.join("./node_modules/.bin/typedoc")} --options "<%= file.path %>"`));
 });
 
 gulp.task("build", gulp.series("clean", "transpile:ts", "transpile:dts", "copy:assets", "lint"));
